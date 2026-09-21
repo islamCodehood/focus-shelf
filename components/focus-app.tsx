@@ -11,6 +11,7 @@ import {
   GraduationCap,
   Check,
   Pause,
+  Archive,
   ArchiveX,
   Pencil,
   X,
@@ -270,15 +271,17 @@ export default function FocusApp({page}: { page: 'board' | 'analytics' }) {
         size={17}/>Focus board</Link><Link href="/analytics"
                                            aria-current={page === 'analytics' ? 'page' : undefined}><BarChart3
         size={17}/>Analytics</Link></nav>
-      <div className="top-actions">{themeButton}
+      <div className="top-actions">
         <button className="primary add-button" disabled={busy || demo} onClick={() => setEditing(blank())}><Plus
           size={18}/><span>Add resource</span></button>
-        <button className="icon-button" aria-label="Sign out" onClick={async () => {
-          if (!demo) await api('/api/session', {method: 'DELETE'});
-          setData(EMPTY);
-          setDemo(false);
-          setSession(s => s ? {...s, authenticated: false} : null);
-        }}><LogOut size={18}/></button>
+        <div className="utility-actions">{themeButton}
+          <button className="icon-button" aria-label="Sign out" onClick={async () => {
+            if (!demo) await api('/api/session', {method: 'DELETE'});
+            setData(EMPTY);
+            setDemo(false);
+            setSession(s => s ? {...s, authenticated: false} : null);
+          }}><LogOut size={18}/></button>
+        </div>
       </div>
     </header>
     <main className="content">{demo &&
@@ -296,9 +299,8 @@ export default function FocusApp({page}: { page: 'board' | 'analytics' }) {
       {page === 'board' ? <>
           <div className="page-heading">
             <div><h1>Your learning focus</h1><p>One main goal. One side goal. Everything else can wait.</p></div>
-            <button className="text-button" disabled={busy || loading || demo} onClick={refresh}><RefreshCw size={15}
-                                                                                                            className={loading ? 'spin' : ''}/>Refresh
-            </button>
+            <button className="icon-button" aria-label="Refresh" disabled={busy || loading || demo} onClick={refresh}>
+              <RefreshCw size={17} className={loading ? 'spin' : ''}/></button>
           </div>
           <div className="slots">{(['Main', 'Side'] as const).map((name, idx) => <section key={name}
                                                                                           className={'slot ' + (idx ? 'side' : '')}>
@@ -321,10 +323,7 @@ export default function FocusApp({page}: { page: 'board' | 'analytics' }) {
                 </button>
               </div>}</section>)}</div>
           <section className="parking">
-            <div className="section-heading"><h2>Parking lot <span>{parked.length} waiting</span></h2>
-              <button className="text-button" onClick={() => setQueue('Parking')}>View all <ChevronRight size={17}/>
-              </button>
-            </div>
+            <div className="section-heading"><h2>Parking lot <span>{parked.length} waiting</span></h2></div>
             {parked.length ?
               <div className="parking-grid">{parked.slice(0, 3).map(item => <button key={item.id} className="park-card"
                                                                                     onClick={() => setEditing({...item})}>
@@ -332,10 +331,11 @@ export default function FocusApp({page}: { page: 'board' | 'analytics' }) {
                        small/><span><strong>{item.title}</strong><small>{item.type} · {item.current ? fmt(item.current) + ' ' + unit(item) : 'Ready when you are'}</small></span><ChevronRight
                 size={18}/></button>)}</div> :
               <div className="quiet-empty">A new book or course caught your eye? Add it here for later.</div>}</section>
-          <div className="shelf-links">{(['Paused', 'Done', 'Dropped'] as const).map(state => <button key={state}
-                                                                                                      onClick={() => setQueue(state)}>{state === 'Done' ?
-            <Check size={16}/> : state === 'Paused' ? <Pause size={16}/> : <ArchiveX size={16}/>} {state}
-            <span>{data.items.filter(i => i.state === state).length}</span></button>)}</div>
+          <div className="shelf-links">{(['Parking', 'Paused', 'Done', 'Dropped'] as const).map(state => <button
+            key={state} onClick={() => setQueue(state)}>{state === 'Done' ? <Check size={16}/> : state === 'Paused' ?
+            <Pause size={16}/> : state === 'Dropped' ? <ArchiveX size={16}/> : <Archive size={16}/>} {state}
+            <span>{state === 'Parking' ? parked.length : data.items.filter(i => i.state === state).length}</span>
+          </button>)}</div>
         </> :
         <>
           <div className="page-heading">
@@ -473,7 +473,7 @@ function ResourceCard({item, busy, onEdit, onProgress, onState}: {
         </div>
         <h3>{item.title}</h3>
         <button className="next-step" disabled={busy} onClick={onEdit}>
-          <span>{item.nextStep ? 'Next: ' + item.nextStep : 'Add your next small step'}</span><Pencil size={14}/>
+          <span>{item.nextStep ? 'Next: ' + item.nextStep : 'Add your next small step'}</span>
         </button>
         {item.resourceUrl && <a className="resource-link" href={item.resourceUrl} target="_blank" rel="noreferrer">Open
             resource <ArrowUpRight size={14}/></a>}</div>
@@ -612,20 +612,20 @@ function ItemForm({initial, busy, items, onSave, onError}: {
                                     placeholder="Unknown? Leave blank"/></label>
       {!draft.id && <label>Already completed<input type="number" min={0} step="any" value={draft.current}
                                                    onChange={e => set('current', Number(e.target.value))}/></label>}
-      <label className="full">Cover image (optional)<input type="file" accept="image/jpeg,image/png,image/webp"
-                                                           disabled={busy || uploading}
-                                                           onChange={e => void upload(e.target.files?.[0])}/><small
-        className="muted">{uploading ? 'Uploading…' : draft.coverFileId ? 'Cover uploaded.' : 'A default cover appears when no image is added.'}</small>{draft.coverFileId &&
-          <button type="button" className="text-button" onClick={() => set('coverFileId', '')}>Remove cover</button>}
-      </label>
-      <label className="full">Resource link (optional)<input type="url" value={draft.resourceUrl} maxLength={2048}
-                                                             onChange={e => set('resourceUrl', e.target.value)}
-                                                             placeholder="https://…"/></label>
       <label className="full">Next small step<input value={draft.nextStep} maxLength={1000}
                                                     onChange={e => set('nextStep', e.target.value)}
                                                     placeholder="Read 5 pages and capture one key idea"/></label>
       <details className="full">
-        <summary>Purpose and queue order</summary>
+        <summary>Cover, link &amp; purpose</summary>
+        <label className="full">Cover image (optional)<input type="file" accept="image/jpeg,image/png,image/webp"
+                                                             disabled={busy || uploading}
+                                                             onChange={e => void upload(e.target.files?.[0])}/><small
+          className="muted">{uploading ? 'Uploading…' : draft.coverFileId ? 'Cover uploaded.' : 'A default cover appears when no image is added.'}</small>{draft.coverFileId &&
+            <button type="button" className="text-button" onClick={() => set('coverFileId', '')}>Remove cover</button>}
+        </label>
+        <label className="full">Resource link (optional)<input type="url" value={draft.resourceUrl} maxLength={2048}
+                                                               onChange={e => set('resourceUrl', e.target.value)}
+                                                               placeholder="https://…"/></label>
         <label>Why does this matter?<textarea value={draft.why} maxLength={2000}
                                               onChange={e => set('why', e.target.value)}/></label><label>I’ll consider
         it done when…<textarea value={draft.doneDefinition} maxLength={2000}
