@@ -15,8 +15,8 @@ This document is the fast context for an AI coding assistant.
 
 ## Safe change procedure
 
-- Trace UI → `/api/data` action → `makeEvent` rule → event row → projection → analytics.
-- Add or update a domain test for invariant changes and an analytics test for date/aggregation changes.
+- Trace UI → `/api/data` action → `makeEvent` rule → event row → projection → analytics. See [`frontend.md`](frontend.md) for the UI side of this trace and [`api.md`](api.md) for the wire contract.
+- Add or update a domain test for invariant changes and an analytics test for date/aggregation changes — see [`testing.md`](testing.md) for the conventions used in `tests/`.
 - Run `npm test`, `npm run typecheck`, and `npm run build`.
 - If the event payload shape changes, keep backward compatibility in `reduceEvents` or provide a migration.
 - Do not rename Sheet tabs or reorder projection columns without updating `Code.gs`, `domain.js`, and documentation together.

@@ -52,7 +52,7 @@ See [docs/setup.md](docs/setup.md) for Google Apps Script and Vercel configurati
 | `lib/analytics.mjs` | Cairo calendar and weekly aggregation |
 | `apps-script/` | Google-side domain rules, event log, projections, cover storage |
 | `tests/` | Domain and analytics regression tests |
-| `docs/` | Architecture, API, rules, flows, decisions, setup, and AI handoff |
+| [`docs/`](docs/README.md) | Architecture, API, rules, flows, frontend, testing, decisions, setup, and AI handoff |
 
 ## Current external resources
 
